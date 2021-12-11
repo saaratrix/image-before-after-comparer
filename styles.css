@@ -4,7 +4,7 @@
   user-select: none;
   overflow: hidden;
   touch-action: none;
-  min-height: 80vh;
+  min-height: 90vh;
   max-height: 100vh;
 }
 .image-comparison-loaded.is-dragging .image-comparison-description {
@@ -60,7 +60,6 @@
   font-size: 1.5em;
   background-color: white;
   color: silver;
-  padding-bottom: 6px;
   margin-left: -15px;
 }
 .image-comparison-slider-handle:before, .image-comparison-slider-handle:after {
@@ -78,6 +77,23 @@
 }
 .image-comparison-slider-handle:after {
   top: 27px;
+}
+
+.image-comparison-slider-handle-left {
+  width: 0;
+  height: 0;
+  border-right: 8px solid silver;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  margin-right: 9px;
+}
+
+.image-comparison-slider-handle-right {
+  width: 0;
+  height: 0;
+  border-left: 8px solid silver;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
 }
 
 body {

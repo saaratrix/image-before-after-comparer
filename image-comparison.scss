@@ -1,6 +1,8 @@
 $imageComparisonColor: silver;
 $imageComparisonHandleSize: 30px;
 $imageComparisonHandleSizeHalf: ($imageComparisonHandleSize / 2);
+$imageComparisonHandleArrowWidth: 8px;
+$imageComparisonHandleArrowHeight: 5px;
 $imageComparisonHandleBorderSize: 2px;
 $imageComparisonHandleLineHeight: ($imageComparisonHandleSizeHalf - $imageComparisonHandleBorderSize);
 $transitionAnimation: 0.2s ease;
@@ -81,8 +83,6 @@ $transitionAnimation: 0.2s ease;
   font-size: 1.5em;
   background-color: white;
   color: $imageComparisonColor;
-  // To center the arrows.
-  padding-bottom: 6px;
   margin-left: -$imageComparisonHandleSizeHalf;
 
   &:before, &:after {
@@ -106,4 +106,21 @@ $transitionAnimation: 0.2s ease;
   &:after {
     top: ($imageComparisonHandleSize - 3);
   }
+}
+
+.image-comparison-slider-handle-left {
+  width: 0;
+  height: 0;
+  border-right: $imageComparisonHandleArrowWidth solid $imageComparisonColor;
+  border-top: $imageComparisonHandleArrowHeight solid transparent;
+  border-bottom: $imageComparisonHandleArrowHeight solid transparent;
+  // This pushes the handles away from the center line.
+  margin-right: 9px;
+}
+.image-comparison-slider-handle-right {
+  width: 0;
+  height: 0;
+  border-left: $imageComparisonHandleArrowWidth solid $imageComparisonColor;
+  border-top: $imageComparisonHandleArrowHeight solid transparent;
+  border-bottom: $imageComparisonHandleArrowHeight solid transparent;
 }
