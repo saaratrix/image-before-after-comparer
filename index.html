@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Before & after image comparer.</title>
+  <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+<main>
+  <div class="image-selection-container">
+    <div class="image-selection image-selection-before">
+      <h3>Before:</h3>
+      <label>URL: </label>
+      <input class='url-selection' type="text" >
+      <br>
+      <label>File: </label>
+      <input class='file-selection' type="file">
+    </div>
+    <div class="image-selection image-selection-after">
+      <h3>After:</h3>
+      <label>URL: </label>
+      <input class='url-selection' type="text">
+      <br>
+      <label>File: </label>
+      <input class='file-selection' type="file">
+    </div>
+  </div>
+  <div class="image-comparison-container" hidden>
+    <div class="image-comparison">
+      <div class="image-comparison-before">
+        <span class="image-comparison-description">Before</span>
+        <img src="//:0" class="max-width-100" alt="Before">
+      </div>
+      <div class="image-comparison-after">
+        <span class="image-comparison-description">After</span>
+        <img src="//:0" class="max-width-100" alt="After">
+      </div>
+      <div class="image-comparison-slider" style="display: none;">
+        <div class="image-comparison-slider-handle">
+          <!-- Bummer need to add css border elements because these are broken in mobile. -->
+          🢐 🢒
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>

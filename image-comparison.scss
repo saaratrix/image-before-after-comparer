@@ -1,0 +1,109 @@
+$imageComparisonColor: silver;
+$imageComparisonHandleSize: 30px;
+$imageComparisonHandleSizeHalf: ($imageComparisonHandleSize / 2);
+$imageComparisonHandleBorderSize: 2px;
+$imageComparisonHandleLineHeight: ($imageComparisonHandleSizeHalf - $imageComparisonHandleBorderSize);
+$transitionAnimation: 0.2s ease;
+
+.image-comparison-loaded {
+  display: flex;
+  position: relative;
+  user-select: none;
+  // To hide the handle overflowing out of the page.
+  overflow: hidden;
+  touch-action: none;
+  min-height: 90vh;
+  max-height: 100vh;
+
+  &.is-dragging {
+    .image-comparison-description {
+      opacity: 0;
+    }
+  }
+
+  .image-comparison-before, .image-comparison-after {
+    display: flex;
+    flex-direction: column;
+    // Centers the description elements.
+    justify-content: center;
+    width: 100%;
+    max-height: 100%;
+
+    img {
+      object-fit: cover;
+      width: 100%;
+      max-height: 100%;
+    }
+  }
+
+  .image-comparison-before {
+    .image-comparison-description {
+      left: 10px;
+    }
+  }
+
+  .image-comparison-after {
+    // So that they overlap.
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    .image-comparison-description {
+      right: 10px;
+    }
+  }
+
+  .image-comparison-description {
+    position: absolute;
+    text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.3);
+    transition: opacity $transitionAnimation;
+  }
+}
+
+.image-comparison-slider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-comparison-slider-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: $imageComparisonHandleSize;
+  height: $imageComparisonHandleSize;
+  border-radius: 50%;
+  border: $imageComparisonHandleBorderSize solid $imageComparisonColor;
+  cursor: grab;
+  font-size: 1.5em;
+  background-color: white;
+  color: $imageComparisonColor;
+  // To center the arrows.
+  padding-bottom: 6px;
+  margin-left: -$imageComparisonHandleSizeHalf;
+
+  &:before, &:after {
+    position: absolute;
+
+    // We can't use % here or the line will not be very tall.
+    height: 9999px;
+    width: 3px;
+    background-color: $imageComparisonColor;
+    content: " ";
+    // Add some padding so it's eaiser to grab.
+    border-left: 2px solid transparent;
+    border-right: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  &:before {
+    bottom: ($imageComparisonHandleSize - 3);
+  }
+
+  &:after {
+    top: ($imageComparisonHandleSize - 3);
+  }
+}
