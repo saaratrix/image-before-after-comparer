@@ -1,11 +1,15 @@
 .image-comparison-loaded {
   display: flex;
-  position: relative;
   user-select: none;
-  overflow: hidden;
   touch-action: none;
   min-height: 90vh;
   max-height: 100vh;
+}
+.image-comparison-loaded .image-comparison-content {
+  display: flex;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
 }
 .image-comparison-loaded.is-dragging .image-comparison-description {
   opacity: 0;
@@ -29,6 +33,7 @@
   position: absolute;
   top: 0;
   left: 0;
+  bottom: 0;
 }
 .image-comparison-loaded .image-comparison-after .image-comparison-description {
   right: 10px;
@@ -43,7 +48,7 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  display: flex;
+  display: none;
   justify-content: center;
   align-items: center;
 }
@@ -52,15 +57,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
+  box-sizing: border-box;
   border-radius: 50%;
   border: 2px solid silver;
   cursor: grab;
   font-size: 1.5em;
   background-color: white;
   color: silver;
-  margin-left: -15px;
+  margin-left: -17px;
 }
 .image-comparison-slider-handle:before, .image-comparison-slider-handle:after {
   position: absolute;
@@ -73,10 +79,10 @@
   background-clip: padding-box;
 }
 .image-comparison-slider-handle:before {
-  bottom: 27px;
+  bottom: 31px;
 }
 .image-comparison-slider-handle:after {
-  top: 27px;
+  top: 31px;
 }
 
 .image-comparison-slider-handle-left {

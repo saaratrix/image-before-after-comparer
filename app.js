@@ -80,7 +80,7 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
         fr.readAsDataURL(file);
     }
     function tryShowComparer() {
-        if (beforeImageElement.src.includes('//:0/') || afterImageElement.src.includes('//:0/')) {
+        if (beforeImageElement.src.includes('//:0') || afterImageElement.src.includes('//:0')) {
             return;
         }
         imageComparisonRoot.hidden = false;

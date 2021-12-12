@@ -3,6 +3,11 @@ interface Listener {
   listener: (event: any) => void;
 }
 
+interface Dimensions {
+  width: number;
+  height: number;
+}
+
 // ^.^ It was a lot more time consuming writing a before & after component than I thought!
 // This class has become a bit of spaghetti now.
 export class ImageBeforeAfterComparisor {
@@ -37,6 +42,8 @@ export class ImageBeforeAfterComparisor {
   }
 
   private addImageComparison(comparisonElement: HTMLElement): Promise<void> {
+    const contentElement = comparisonElement.querySelector<HTMLElement>('.image-comparison-content');
+
     const beforeElement = comparisonElement.querySelector<HTMLElement>('.image-comparison-before');
     const afterElement = comparisonElement.querySelector<HTMLElement>('.image-comparison-after');
 
@@ -45,7 +52,7 @@ export class ImageBeforeAfterComparisor {
 
     const sliderElement = comparisonElement.querySelector<HTMLElement>('.image-comparison-slider');
     const sliderHandleElement = sliderElement?.querySelector<HTMLElement>('.image-comparison-slider-handle');
-    if (!beforeElement || !afterElement || !beforeElement || !beforeImage || !afterImage || !sliderElement || !sliderHandleElement) {
+    if (!contentElement || !beforeElement || !afterElement || !beforeElement || !beforeImage || !afterImage || !sliderElement || !sliderHandleElement) {
       return Promise.resolve();
     }
 
@@ -54,38 +61,81 @@ export class ImageBeforeAfterComparisor {
     afterImage.draggable = false;
 
     comparisonElement.classList.add('image-comparison-loaded');
-    this.initSlider(sliderElement, sliderHandleElement, comparisonElement, beforeElement, afterElement);
+    this.initSlider(sliderElement, sliderHandleElement, contentElement, beforeElement, afterElement);
 
     const promises: Promise<void>[] = [
       this.addImageLoadEvent(beforeImage),
       this.addImageLoadEvent(afterImage),
     ];
 
-    // We use left instead of transform because left is dependant on the parent and transform is dependant on the current element.
+    // We use left instead of transform because left is dependent on the parent and transform is dependent on the current element.
     // And since sliderElement is only ~30px width we can't use translateX(50%).
     // And using % is much nicer than pixels because of window onresize events etc.
     sliderElement.style.left = "50%";
-    this.setClipPath(50, afterElement);
+    this.setBeforeClipPath(50, beforeElement);
+    this.setAfterClipPath(50, afterElement);
 
     const onResize = () => {
-      this.updateHeight(beforeElement, afterElement);
+      const dimensions = this.getMaximumDimensions(comparisonElement, beforeImage, afterImage);
+      this.setMaximumDimensions(dimensions, contentElement, beforeImage, afterImage);
     }
     this.addedListeners.push({ type: 'resize', listener: onResize });
     window.addEventListener('resize', onResize);
 
     return Promise.all(promises).then(() => {
-      this.updateHeight(beforeElement, afterElement);
+      onResize();
     });
   }
 
-  private updateHeight(beforeElement: HTMLElement, afterElement: HTMLElement): void {
-    // Remove any heights to be able to get proper heights (could technically use aspect ratio instead)
-    beforeElement.style.height = '';
-    afterElement.style.height = '';
-    // Set the same height of the container divs
-    const height = Math.min(beforeElement.offsetHeight, afterElement.offsetHeight);
-    beforeElement.style.height = height + 'px';
-    afterElement.style.height = height + 'px';
+  /**
+   * Get the maximum width or maximum height that we can set the image.
+   */
+  private getMaximumDimensions(comparisonElement: HTMLElement, beforeImage: HTMLImageElement, afterImage: HTMLImageElement): Dimensions {
+    const comparisonBounds = comparisonElement.getBoundingClientRect();
+    // Get the maximum widths & heights before applying aspect ratio.
+    let availableWidth = Math.min(comparisonBounds.width, window.innerWidth, beforeImage.naturalWidth, afterImage.naturalWidth);
+    let availableHeight = Math.min(comparisonBounds.height, window.innerHeight, beforeImage.naturalHeight, afterImage.naturalHeight);
+
+    const beforeDimensions = this.getImageDimensions(beforeImage, availableWidth, availableHeight);
+    const afterDimensions = this.getImageDimensions(afterImage, availableWidth, availableHeight);
+
+    return {
+      height: Math.min(beforeDimensions.height, afterDimensions.height),
+      width: Math.min(beforeDimensions.width, afterDimensions.width),
+    };
+  }
+
+  private getImageDimensions(imageElement: HTMLImageElement, availableWidth: number, availableHeight: number): Dimensions {
+    let width = imageElement.naturalWidth;
+    let height = imageElement.naturalHeight;
+
+    if (width > availableWidth) {
+      const ratio = width / availableWidth;
+      width /= ratio;
+      height /= ratio;
+    }
+
+    if (height > availableHeight) {
+      const ratio = height / availableWidth;
+      width /= ratio;
+      height /= ratio;
+    }
+
+    return {
+      width,
+      height,
+    };
+  }
+
+  private setMaximumDimensions(dimensions: Dimensions, contentElement: HTMLElement, beforeImage: HTMLImageElement, afterImage: HTMLImageElement): void {
+    contentElement.style.width = `${dimensions.width}px`;
+    contentElement.style.height = `${dimensions.height}px`;
+
+    beforeImage.style.maxWidth = `${dimensions.width}px`;
+    afterImage.style.maxWidth = `${dimensions.width}px`;
+
+    beforeImage.style.maxHeight = `${dimensions.height}px`;
+    afterImage.style.maxHeight = `${dimensions.height}px`;
   }
 
   private addImageLoadEvent(image: HTMLImageElement): Promise<void> {
@@ -104,8 +154,8 @@ export class ImageBeforeAfterComparisor {
     return promise;
   }
 
-  private initSlider(sliderElement: HTMLElement, sliderHandleElement: HTMLElement, comparisonElement: HTMLElement, beforeElement: HTMLElement, afterElement: HTMLElement): void {
-    sliderElement.style.display = '';
+  private initSlider(sliderElement: HTMLElement, sliderHandleElement: HTMLElement, contentElement: HTMLElement, beforeElement: HTMLElement, afterElement: HTMLElement): void {
+    sliderElement.style.display = 'flex';
 
     let isPointerDown: boolean = false;
     let pointerDownOffset: number = 0;
@@ -113,7 +163,7 @@ export class ImageBeforeAfterComparisor {
       isPointerDown = true;
       const handleBounds = sliderHandleElement.getBoundingClientRect();
       pointerDownOffset = (event.clientX - handleBounds.left) - (handleBounds.width / 2);
-      comparisonElement.classList.add('is-dragging');
+      contentElement.classList.add('is-dragging');
     });
 
     const pointerMove = (event: PointerEvent) => {
@@ -121,7 +171,7 @@ export class ImageBeforeAfterComparisor {
         return;
       }
 
-      const bounds = comparisonElement.getBoundingClientRect();
+      const bounds = contentElement.getBoundingClientRect();
       let x = event.clientX - bounds.left - pointerDownOffset;
 
       // const min = (0 - sliderElement.offsetWidth / 2);
@@ -135,12 +185,13 @@ export class ImageBeforeAfterComparisor {
       // Move the range back from 0 -> max
       // const offsetPercentage = ((x - min) / (max - min)) * 100;
 
-      this.setClipPath(offsetPercentage, afterElement);
+      this.setBeforeClipPath(offsetPercentage, beforeElement);
+      this.setAfterClipPath(offsetPercentage, afterElement);
     };
 
     const pointerUp = (): void => {
       isPointerDown = false;
-      comparisonElement.classList.remove('is-dragging');
+      contentElement.classList.remove('is-dragging');
     }
 
     window.addEventListener('pointermove', pointerMove);
@@ -149,7 +200,11 @@ export class ImageBeforeAfterComparisor {
     this.addedListeners.push({ type: 'pointerup', listener: pointerUp });
   }
 
-  private setClipPath(offsetX: number, element: HTMLElement): void {
+  private setBeforeClipPath(offsetX: number, element: HTMLElement): void {
+    element.style.clipPath = `polygon(0% 0%, ${offsetX}% 0%, ${offsetX}% 100%, 0% 100%)`;
+  }
+
+  private setAfterClipPath(offsetX: number, element: HTMLElement): void {
     element.style.clipPath = `polygon(${offsetX}% 0%,100% 0%,100% 100%,${offsetX}% 100%)`;
   }
 }

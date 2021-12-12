@@ -1,5 +1,5 @@
 $imageComparisonColor: silver;
-$imageComparisonHandleSize: 30px;
+$imageComparisonHandleSize: 34px;
 $imageComparisonHandleSizeHalf: ($imageComparisonHandleSize / 2);
 $imageComparisonHandleArrowWidth: 8px;
 $imageComparisonHandleArrowHeight: 5px;
@@ -9,13 +9,21 @@ $transitionAnimation: 0.2s ease;
 
 .image-comparison-loaded {
   display: flex;
-  position: relative;
   user-select: none;
-  // To hide the handle overflowing out of the page.
-  overflow: hidden;
+
   touch-action: none;
   min-height: 90vh;
   max-height: 100vh;
+
+  .image-comparison-content {
+    display: flex;
+    width: 100%;
+    position: relative;
+    // To hide the handle slider overflowing out of the page.
+    // It would have a scrollbar if you slide all the way to the right.
+    // And vertically the | would be visible outside the content.
+    overflow: hidden;
+  }
 
   &.is-dragging {
     .image-comparison-description {
@@ -49,6 +57,8 @@ $transitionAnimation: 0.2s ease;
     position: absolute;
     top: 0;
     left: 0;
+    // Otherwise height isn't 100% and this then centers the image vertically.
+    bottom: 0;
 
     .image-comparison-description {
       right: 10px;
@@ -66,7 +76,7 @@ $transitionAnimation: 0.2s ease;
   position: absolute;
   top: 0;
   bottom: 0;
-  display: flex;
+  display: none;
   justify-content: center;
   align-items: center;
 }
@@ -77,6 +87,7 @@ $transitionAnimation: 0.2s ease;
   justify-content: center;
   width: $imageComparisonHandleSize;
   height: $imageComparisonHandleSize;
+  box-sizing: border-box;
   border-radius: 50%;
   border: $imageComparisonHandleBorderSize solid $imageComparisonColor;
   cursor: grab;

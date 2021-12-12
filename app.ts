@@ -106,7 +106,7 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
   }
 
   function tryShowComparer(): void {
-    if (beforeImageElement.src.includes('//:0/') || afterImageElement.src.includes('//:0/')) {
+    if (beforeImageElement.src.includes('//:0') || afterImageElement.src.includes('//:0')) {
       return;
     }
 
