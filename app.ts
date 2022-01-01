@@ -35,6 +35,8 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
 
     initImageSelection(beforeContainer, 'before');
     initImageSelection(afterContainer, 'after');
+
+    trySetInitialImageUrls(beforeContainer, afterContainer);
   });
 
   function setImageComparisonMaxHeight(): void {
@@ -93,6 +95,9 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
     const file = files[0];
     const filename = file.name;
 
+    // Source: https://stackoverflow.com/a/12900504/2437350
+    const fileExtension = filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
+
     const fr = new FileReader();
     fr.onload = () => {
       targetImage.src = fr.result as string;
@@ -105,7 +110,57 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
     fr.readAsDataURL(file);
   }
 
+  function trySetInitialImageUrls(beforeContainer: HTMLElement | null, afterContainer: HTMLElement | null): void {
+    const url = new URL(location.href);
+    const beforeUri = url.searchParams.has('before') ? decodeURI(url.searchParams.get('before')!) : '';
+    const afterUri = url.searchParams.has('after') ? decodeURI(url.searchParams.get('after')!) : '';
+    const beforeUrlSelection = beforeContainer?.querySelector<HTMLInputElement>('.url-selection');
+    const afterUrlSelection = afterContainer?.querySelector<HTMLInputElement>('.url-selection');
+
+    let shouldTryShowComparer: boolean = false;
+
+    if (beforeUri || afterUri) {
+      const cancel =  confirm(`Do you want to load images: \n${beforeUri}\n${afterUri}`);
+      if (!cancel) {
+        truUpdateQueryParams();
+        return;
+      }
+    }
+
+    if (beforeUri && beforeUrlSelection) {
+      beforeImageElement.src = beforeUri;
+      beforeUrlSelection.value = beforeUri;
+      shouldTryShowComparer = true;
+    }
+    if (afterUri && afterUrlSelection) {
+      afterImageElement.src = afterUri;
+      afterUrlSelection.value = afterUri;
+      shouldTryShowComparer = true;
+    }
+
+    if (!shouldTryShowComparer) {
+      return;
+    }
+
+    tryShowComparer();
+  }
+
+  function truUpdateQueryParams(): void {
+    if (beforeImageElement.src.includes('//:0') || afterImageElement.src.includes('//:0')) {
+      history.pushState(undefined, '', window.location.pathname);
+      return;
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.set('before', beforeImageElement.src);
+    searchParams.set('after', afterImageElement.src);
+    const relativePathQuery = window.location.pathname + '?' + searchParams.toString();
+    history.pushState(undefined, '', relativePathQuery);
+  }
+
   function tryShowComparer(): void {
+    truUpdateQueryParams();
+
     if (beforeImageElement.src.includes('//:0') || afterImageElement.src.includes('//:0')) {
       return;
     }
