@@ -112,8 +112,8 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
 
   function trySetInitialImageUrls(beforeContainer: HTMLElement | null, afterContainer: HTMLElement | null): void {
     const url = new URL(location.href);
-    const beforeUri = url.searchParams.has('before') ? decodeURI(url.searchParams.get('before')!) : '';
-    const afterUri = url.searchParams.has('after') ? decodeURI(url.searchParams.get('after')!) : '';
+    const beforeUri = decodeImageUri(url, 'before');
+    const afterUri = decodeImageUri(url, 'after');
     const beforeUrlSelection = beforeContainer?.querySelector<HTMLInputElement>('.url-selection');
     const afterUrlSelection = afterContainer?.querySelector<HTMLInputElement>('.url-selection');
 
@@ -122,7 +122,7 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
     if (beforeUri || afterUri) {
       const cancel =  confirm(`Do you want to load images: \n${beforeUri}\n${afterUri}`);
       if (!cancel) {
-        truUpdateQueryParams();
+        tryUpdateQueryParams();
         return;
       }
     }
@@ -145,8 +145,18 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
     tryShowComparer();
   }
 
-  function truUpdateQueryParams(): void {
-    if (beforeImageElement.src.includes('//:0') || afterImageElement.src.includes('//:0')) {
+  function decodeImageUri(url: URL, key: 'before' | 'after'): string {
+    const uri = url.searchParams.has('before') ? decodeURI(url.searchParams.get('before')!) : '';
+    // Base64 is currently not supported.
+    if (uri.startsWith('data:')) {
+      return '';
+    }
+
+    return uri;
+  }
+
+  function tryUpdateQueryParams(): void {
+    if (!canUpdateQueryParams()) {
       history.pushState(undefined, '', window.location.pathname);
       return;
     }
@@ -158,8 +168,21 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
     history.pushState(undefined, '', relativePathQuery);
   }
 
+  function canUpdateQueryParams(): boolean {
+    if (beforeImageElement.src.includes('//:0') || afterImageElement.src.includes('//:0')) {
+      return false;
+    }
+
+    // Base64 is currently not supported.
+    if (beforeImageElement.src.startsWith('data:') || afterImageElement.src.startsWith('data:')) {
+      return false;
+    }
+
+    return true;
+  }
+
   function tryShowComparer(): void {
-    truUpdateQueryParams();
+    tryUpdateQueryParams();
 
     if (beforeImageElement.src.includes('//:0') || afterImageElement.src.includes('//:0')) {
       return;

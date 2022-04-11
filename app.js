@@ -84,15 +84,15 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
     }
     function trySetInitialImageUrls(beforeContainer, afterContainer) {
         const url = new URL(location.href);
-        const beforeUri = url.searchParams.has('before') ? decodeURI(url.searchParams.get('before')) : '';
-        const afterUri = url.searchParams.has('after') ? decodeURI(url.searchParams.get('after')) : '';
-        const beforeUrlSelection = beforeContainer.querySelector('.url-selection');
-        const afterUrlSelection = afterContainer.querySelector('.url-selection');
+        const beforeUri = decodeImageUri(url, 'before');
+        const afterUri = decodeImageUri(url, 'after');
+        const beforeUrlSelection = beforeContainer?.querySelector('.url-selection');
+        const afterUrlSelection = afterContainer?.querySelector('.url-selection');
         let shouldTryShowComparer = false;
         if (beforeUri || afterUri) {
             const cancel = confirm(`Do you want to load images: \n${beforeUri}\n${afterUri}`);
             if (!cancel) {
-                truUpdateQueryParams();
+                tryUpdateQueryParams();
                 return;
             }
         }
@@ -111,8 +111,16 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
         }
         tryShowComparer();
     }
-    function truUpdateQueryParams() {
-        if (beforeImageElement.src.includes('//:0') || afterImageElement.src.includes('//:0')) {
+    function decodeImageUri(url, key) {
+        const uri = url.searchParams.has('before') ? decodeURI(url.searchParams.get('before')) : '';
+        // Base64 is currently not supported.
+        if (uri.startsWith('data:')) {
+            return '';
+        }
+        return uri;
+    }
+    function tryUpdateQueryParams() {
+        if (!canUpdateQueryParams()) {
             history.pushState(undefined, '', window.location.pathname);
             return;
         }
@@ -122,8 +130,18 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
         const relativePathQuery = window.location.pathname + '?' + searchParams.toString();
         history.pushState(undefined, '', relativePathQuery);
     }
+    function canUpdateQueryParams() {
+        if (beforeImageElement.src.includes('//:0') || afterImageElement.src.includes('//:0')) {
+            return false;
+        }
+        // Base64 is currently not supported.
+        if (beforeImageElement.src.startsWith('data:') || afterImageElement.src.startsWith('data:')) {
+            return false;
+        }
+        return true;
+    }
     function tryShowComparer() {
-        truUpdateQueryParams();
+        tryUpdateQueryParams();
         if (beforeImageElement.src.includes('//:0') || afterImageElement.src.includes('//:0')) {
             return;
         }
