@@ -24,6 +24,7 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
         const afterContainer = document.querySelector('.image-selection-after');
         initImageSelection(beforeContainer, 'before');
         initImageSelection(afterContainer, 'after');
+        trySetInitialImageUrls(beforeContainer, afterContainer);
     });
     function setImageComparisonMaxHeight() {
         const imageComparisonElement = imageComparisonRoot.querySelector('.image-comparison');
@@ -69,6 +70,8 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
         }
         const file = files[0];
         const filename = file.name;
+        // Source: https://stackoverflow.com/a/12900504/2437350
+        const fileExtension = filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
         const fr = new FileReader();
         fr.onload = () => {
             targetImage.src = fr.result;
@@ -79,7 +82,66 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
         };
         fr.readAsDataURL(file);
     }
+    function trySetInitialImageUrls(beforeContainer, afterContainer) {
+        const url = new URL(location.href);
+        const beforeUri = decodeImageUri(url, 'before');
+        const afterUri = decodeImageUri(url, 'after');
+        const beforeUrlSelection = beforeContainer?.querySelector('.url-selection');
+        const afterUrlSelection = afterContainer?.querySelector('.url-selection');
+        let shouldTryShowComparer = false;
+        if (beforeUri || afterUri) {
+            const cancel = confirm(`Do you want to load images: \n${beforeUri}\n${afterUri}`);
+            if (!cancel) {
+                tryUpdateQueryParams();
+                return;
+            }
+        }
+        if (beforeUri && beforeUrlSelection) {
+            beforeImageElement.src = beforeUri;
+            beforeUrlSelection.value = beforeUri;
+            shouldTryShowComparer = true;
+        }
+        if (afterUri && afterUrlSelection) {
+            afterImageElement.src = afterUri;
+            afterUrlSelection.value = afterUri;
+            shouldTryShowComparer = true;
+        }
+        if (!shouldTryShowComparer) {
+            return;
+        }
+        tryShowComparer();
+    }
+    function decodeImageUri(url, key) {
+        const uri = url.searchParams.has('before') ? decodeURI(url.searchParams.get('before')) : '';
+        // Base64 is currently not supported.
+        if (uri.startsWith('data:')) {
+            return '';
+        }
+        return uri;
+    }
+    function tryUpdateQueryParams() {
+        if (!canUpdateQueryParams()) {
+            history.pushState(undefined, '', window.location.pathname);
+            return;
+        }
+        const searchParams = new URLSearchParams();
+        searchParams.set('before', beforeImageElement.src);
+        searchParams.set('after', afterImageElement.src);
+        const relativePathQuery = window.location.pathname + '?' + searchParams.toString();
+        history.pushState(undefined, '', relativePathQuery);
+    }
+    function canUpdateQueryParams() {
+        if (beforeImageElement.src.includes('//:0') || afterImageElement.src.includes('//:0')) {
+            return false;
+        }
+        // Base64 is currently not supported.
+        if (beforeImageElement.src.startsWith('data:') || afterImageElement.src.startsWith('data:')) {
+            return false;
+        }
+        return true;
+    }
     function tryShowComparer() {
+        tryUpdateQueryParams();
         if (beforeImageElement.src.includes('//:0') || afterImageElement.src.includes('//:0')) {
             return;
         }

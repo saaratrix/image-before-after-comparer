@@ -35,6 +35,8 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
 
     initImageSelection(beforeContainer, 'before');
     initImageSelection(afterContainer, 'after');
+
+    trySetInitialImageUrls(beforeContainer, afterContainer);
   });
 
   function setImageComparisonMaxHeight(): void {
@@ -93,6 +95,9 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
     const file = files[0];
     const filename = file.name;
 
+    // Source: https://stackoverflow.com/a/12900504/2437350
+    const fileExtension = filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
+
     const fr = new FileReader();
     fr.onload = () => {
       targetImage.src = fr.result as string;
@@ -105,7 +110,80 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
     fr.readAsDataURL(file);
   }
 
+  function trySetInitialImageUrls(beforeContainer: HTMLElement | null, afterContainer: HTMLElement | null): void {
+    const url = new URL(location.href);
+    const beforeUri = decodeImageUri(url, 'before');
+    const afterUri = decodeImageUri(url, 'after');
+    const beforeUrlSelection = beforeContainer?.querySelector<HTMLInputElement>('.url-selection');
+    const afterUrlSelection = afterContainer?.querySelector<HTMLInputElement>('.url-selection');
+
+    let shouldTryShowComparer: boolean = false;
+
+    if (beforeUri || afterUri) {
+      const cancel =  confirm(`Do you want to load images: \n${beforeUri}\n${afterUri}`);
+      if (!cancel) {
+        tryUpdateQueryParams();
+        return;
+      }
+    }
+
+    if (beforeUri && beforeUrlSelection) {
+      beforeImageElement.src = beforeUri;
+      beforeUrlSelection.value = beforeUri;
+      shouldTryShowComparer = true;
+    }
+    if (afterUri && afterUrlSelection) {
+      afterImageElement.src = afterUri;
+      afterUrlSelection.value = afterUri;
+      shouldTryShowComparer = true;
+    }
+
+    if (!shouldTryShowComparer) {
+      return;
+    }
+
+    tryShowComparer();
+  }
+
+  function decodeImageUri(url: URL, key: 'before' | 'after'): string {
+    const uri = url.searchParams.has('before') ? decodeURI(url.searchParams.get('before')!) : '';
+    // Base64 is currently not supported.
+    if (uri.startsWith('data:')) {
+      return '';
+    }
+
+    return uri;
+  }
+
+  function tryUpdateQueryParams(): void {
+    if (!canUpdateQueryParams()) {
+      history.pushState(undefined, '', window.location.pathname);
+      return;
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.set('before', beforeImageElement.src);
+    searchParams.set('after', afterImageElement.src);
+    const relativePathQuery = window.location.pathname + '?' + searchParams.toString();
+    history.pushState(undefined, '', relativePathQuery);
+  }
+
+  function canUpdateQueryParams(): boolean {
+    if (beforeImageElement.src.includes('//:0') || afterImageElement.src.includes('//:0')) {
+      return false;
+    }
+
+    // Base64 is currently not supported.
+    if (beforeImageElement.src.startsWith('data:') || afterImageElement.src.startsWith('data:')) {
+      return false;
+    }
+
+    return true;
+  }
+
   function tryShowComparer(): void {
+    tryUpdateQueryParams();
+
     if (beforeImageElement.src.includes('//:0') || afterImageElement.src.includes('//:0')) {
       return;
     }

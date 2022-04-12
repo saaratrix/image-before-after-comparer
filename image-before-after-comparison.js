@@ -86,7 +86,7 @@ export class ImageBeforeAfterComparisor {
             height /= ratio;
         }
         if (height > availableHeight) {
-            const ratio = height / availableWidth;
+            const ratio = height / availableHeight;
             width /= ratio;
             height /= ratio;
         }
