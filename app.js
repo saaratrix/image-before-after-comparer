@@ -112,7 +112,7 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
         tryShowComparer();
     }
     function decodeImageUri(url, key) {
-        const uri = url.searchParams.has('before') ? decodeURI(url.searchParams.get('before')) : '';
+        const uri = url.searchParams.has(key) ? decodeURI(url.searchParams.get(key)) : '';
         // Base64 is currently not supported.
         if (uri.startsWith('data:')) {
             return '';
