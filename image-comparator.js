@@ -1,6 +1,6 @@
 // ^.^ It was a lot more time consuming writing a before & after component than I thought!
 // This class has become a bit of spaghetti now.
-export class ImageBeforeAfterComparisor {
+export class ImageComparator {
     addedListeners = [];
     /**
      * We need a promise
@@ -161,4 +161,4 @@ export class ImageBeforeAfterComparisor {
         element.style.clipPath = `polygon(${offsetX}% 0%,100% 0%,100% 100%,${offsetX}% 100%)`;
     }
 }
-//# sourceMappingURL=image-before-after-comparison.js.map
+//# sourceMappingURL=image-comparator.js.map
