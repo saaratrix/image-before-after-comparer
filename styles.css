@@ -118,7 +118,7 @@ main {
   min-height: 100%;
 }
 
-.image-selection-container {
+.image-settings-container {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;

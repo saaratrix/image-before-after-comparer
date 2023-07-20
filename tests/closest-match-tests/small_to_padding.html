@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <link href="closest-match-style.css" type="text/css" rel="stylesheet" />
+</head>
+<body>
+  <img id="source_image" src="simba_christmas_small.jpg" />
+  <div id="templateWrapper">
+    <img id="template_image" src="simba_christmas_padding.jpg " />
+  </div>
+
+  <p id="status">OpenCV.js is loading...</p>
+
+  <script>
+    function onOpenCvReady() {
+      document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+
+      cv['onRuntimeInitialized']=()=>{
+        let sourceImage = cv.imread('source_image');
+        let templateImage = cv.imread('template_image');
+        let dst = new cv.Mat();
+        let mask = new cv.Mat();
+        cv.matchTemplate(sourceImage, templateImage, dst, cv.TM_CCOEFF, mask);
+        let result = cv.minMaxLoc(dst, mask);
+        let maxPoint = result.maxLoc;
+        console.log("Point of maximum correlation: ", maxPoint.x, maxPoint.y);
+        sourceImage.delete(); templateImage.delete(); dst.delete(); mask.delete();
+
+        const sourceImageElement = document.getElementById('source_image');
+
+        const div = document.createElement('div');
+        div.style.width = '5px';
+        div.style.height = '5px';
+        div.style.background = 'pink';
+        div.style.position = 'absolute';
+        div.style.left = `${sourceImageElement.offsetLeft + maxPoint.x}px`; // adjust according to the offset of the image
+        div.style.top = `${sourceImageElement.offsetTop + maxPoint.y}px`; // adjust according to the offset of the image
+
+        const template = document.getElementById('templateWrapper');
+        template.style.position = 'absolute';
+        template.style.left = `${sourceImageElement.offsetLeft + maxPoint.x}px`;
+        template.style.top = `${sourceImageElement.offsetTop + maxPoint.y}px`;
+
+        document.body.appendChild(div);
+      };
+    }
+
+
+  </script>
+  <script async src="https://docs.opencv.org/master/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+
+</body>
+</html>

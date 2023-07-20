@@ -10,7 +10,7 @@ interface Dimensions {
 
 // ^.^ It was a lot more time consuming writing a before & after component than I thought!
 // This class has become a bit of spaghetti now.
-export class ImageBeforeAfterComparisor {
+export class ImageComparator {
   private addedListeners: Listener[] = [];
 
   /**

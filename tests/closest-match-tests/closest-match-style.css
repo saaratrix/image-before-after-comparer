@@ -1,0 +1,18 @@
+  #templateWrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  #template_image {
+    opacity: 0.67;
+  }
+
+  #templateWrapper::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 0, 0.25);
+  }

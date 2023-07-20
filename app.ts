@@ -1,4 +1,6 @@
-import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
+import { ImageComparator } from './image-comparator.js';
+import { ImagePositionAdjuster } from './image-position-adjuster.js';
+import { ImageAligner } from "./image-aligner.js";
 
 (function() {
   type BeforeAfter = 'before' | 'after';
@@ -8,9 +10,11 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
   let beforeImageElement!: HTMLImageElement;
   let afterImageElement!: HTMLImageElement;
 
-  let imageComparisor: ImageBeforeAfterComparisor = new ImageBeforeAfterComparisor();
+  let positionAdjuster: ImagePositionAdjuster = new ImagePositionAdjuster();
+  let imageComparator: ImageComparator = new ImageComparator();
+  let imageAligner: ImageAligner = new ImageAligner();
 
-  window.addEventListener('DOMContentLoaded', () => {
+  window.addEventListener('DOMContentLoaded', async () => {
     imageComparisonRoot = document.querySelector<HTMLElement>('.image-comparison-container');
     if (!imageComparisonRoot) {
       console.log('missing image comparison container');
@@ -25,7 +29,7 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
     }
 
     setImageComparisonMaxHeight();
-    imageComparisor.tryAddImageComparison(imageComparisonRoot).then();
+    imageComparator.tryAddImageComparison(imageComparisonRoot).then();
 
     beforeImageElement = beforeImage
     afterImageElement = afterImage;
@@ -33,22 +37,37 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
     const beforeContainer = document.querySelector<HTMLElement>('.image-selection-before');
     const afterContainer = document.querySelector<HTMLElement>('.image-selection-after');
 
-    initImageSelection(beforeContainer, 'before');
-    initImageSelection(afterContainer, 'after');
+    initializeImageSelection(beforeContainer, 'before');
+    initializeImageSelection(afterContainer, 'after');
+
+    imageAligner.initialize();
+    await positionAdjuster.initialize();
+
+    listenForImageDataRequest();
 
     trySetInitialImageUrls(beforeContainer, afterContainer);
   });
 
+  const listenForImageDataRequest = () => {
+    document.addEventListener('image:data:request', (event: Event) => {
+      if (!areImagesValid()) {
+        return;
+      }
+
+      imageAligner.handleImageDataRequest(event, beforeImageElement, afterImageElement);
+    });
+}
+
   function setImageComparisonMaxHeight(): void {
     const imageComparisonElement = imageComparisonRoot!.querySelector<HTMLElement>('.image-comparison');
-    const selectionBounds = document.querySelector<HTMLElement>('.image-selection-container')!.getBoundingClientRect();
+    const selectionBounds = document.querySelector<HTMLElement>('.image-settings-container')!.getBoundingClientRect();
     // 8 px from the <main> padding.
     const height = selectionBounds.bottom + 8;
 
     imageComparisonElement!.style.maxHeight = `calc(100vh - ${height}px)`;
   }
 
-  function initImageSelection(container: HTMLElement | null, type: BeforeAfter): void {
+  function initializeImageSelection(container: HTMLElement | null, type: BeforeAfter): void {
     if (!container) {
       console.log('missing container');
       return;
@@ -184,10 +203,14 @@ import { ImageBeforeAfterComparisor } from './image-before-after-comparison.js';
   function tryShowComparer(): void {
     tryUpdateQueryParams();
 
-    if (beforeImageElement.src.includes('//:0') || afterImageElement.src.includes('//:0')) {
+    if (areImagesValid()) {
       return;
     }
 
     imageComparisonRoot!.hidden = false;
+  }
+
+  function areImagesValid(): boolean {
+    return !beforeImageElement.src.includes('//:0') && !afterImageElement.src.includes('//:0');
   }
 })();
