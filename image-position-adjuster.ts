@@ -1,3 +1,6 @@
+import { PendingEvent } from "./models/pending-event";
+import { ImagePair } from "./models/image-pair";
+
 export class ImagePositionAdjuster {
     static isRuntimeInitialized = false;
 
@@ -11,8 +14,11 @@ export class ImagePositionAdjuster {
 
         this.loadingCv = this.getOpenCVScriptLoadedPromise()
             .then(() => this.waitForRuntimeInitialized())
-            .then(() => { this.isOpenCvInitialized = true });
+            .then(() => {
+                this.isOpenCvInitialized = true
+            });
 
+        document.addEventListener('image:template:request', (event) => this.onTemplateRequest(event as CustomEvent));
         return this.loadingCv;
     }
 
@@ -57,8 +63,22 @@ export class ImagePositionAdjuster {
         });
     }
 
+    private onTemplateRequest = (event: CustomEvent<PendingEvent<Point, ImagePair>>): void => {
+        if (!event.detail.data) {
+            console.log('No valid data for template request.');
+            return;
+        }
+
+        const { a, b } = event.detail.data;
+
+        event.detail.pending = new Promise((resolve) => {
+            const point = this.getMatch(a, b);
+            resolve(point);
+        });
+    }
+
     public getMatch(aSource: HTMLImageElement, bSource: HTMLImageElement): Point {
-        if (this.isOpenCvInitialized) {
+        if (!this.isOpenCvInitialized) {
             throw new Error(`OpenCV.js has not been initialized yet. First run ${this.initialize.name}`);
         }
 

@@ -34,7 +34,25 @@ export class ImageAligner {
         console.log(`Auto image alignment is now ${target.checked ? 'ON' : 'OFF'}`);
     };
     handleButtonClick = async (event) => {
-        console.log('Image alignment button has been clicked');
+        const imagePair = await this.tryGetImagePair();
+        if (!imagePair) {
+            return;
+        }
+        imagePair.a.style.transform = `translate(0, 0)`;
+        imagePair.b.style.transform = `translate(0, 0)`;
+        // Now make a request to OpenCV to get the template matching data
+        const point = await this.tryGetMatchedPoint(imagePair);
+        if (!point) {
+            return;
+        }
+        const x = point.x.toString() + (point.x !== 0 ? 'px' : '');
+        const y = point.y.toString() + (point.y !== 0 ? 'px' : '');
+        // Then maybe dispatch an event that we got the data. Or have the template matching code do it.
+        imagePair.a.style.transform = `translate(0, 0)`;
+        imagePair.b.style.transform = `translate(${x}, ${y})`;
+        console.log(x, y);
+    };
+    async tryGetImagePair() {
         const dataRequestEvent = new CustomEvent('image:data:request', {
             detail: {
                 pending: undefined,
@@ -45,10 +63,22 @@ export class ImageAligner {
             console.error('no listeners on data request');
             return;
         }
-        const { a: before, b: after } = await dataRequestEvent.detail.pending;
-        // Now make a request to OpenCV to get the template matching data
-        // Then maybe dispatch an event that we got the data. Or have the template matching code do it.
-    };
+        return await dataRequestEvent.detail.pending;
+    }
+    async tryGetMatchedPoint(imagePair) {
+        const openCVTemplateRequestEvent = new CustomEvent('image:template:request', {
+            detail: {
+                pending: undefined,
+                data: imagePair,
+            }
+        });
+        document.dispatchEvent(openCVTemplateRequestEvent);
+        if (!openCVTemplateRequestEvent.detail.pending) {
+            console.log('No request made to openCV.js');
+            return undefined;
+        }
+        return await openCVTemplateRequestEvent.detail.pending;
+    }
     handlePositionInputChange = (event) => {
         let target = event.target;
         let positionValue = parseInt(target.value);

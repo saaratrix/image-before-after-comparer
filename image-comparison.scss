@@ -69,6 +69,8 @@ $transitionAnimation: 0.2s ease;
     position: absolute;
     text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.3);
     transition: opacity $transitionAnimation;
+    // Need to have higher z-index over the image when using translate()
+    z-index: 1;
   }
 }
 

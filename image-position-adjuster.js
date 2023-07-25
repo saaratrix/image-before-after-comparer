@@ -8,7 +8,10 @@ export class ImagePositionAdjuster {
         }
         this.loadingCv = this.getOpenCVScriptLoadedPromise()
             .then(() => this.waitForRuntimeInitialized())
-            .then(() => { this.isOpenCvInitialized = true; });
+            .then(() => {
+            this.isOpenCvInitialized = true;
+        });
+        document.addEventListener('image:template:request', (event) => this.onTemplateRequest(event));
         return this.loadingCv;
     }
     getOpenCVScriptLoadedPromise() {
@@ -47,8 +50,19 @@ export class ImagePositionAdjuster {
             };
         });
     }
+    onTemplateRequest = (event) => {
+        if (!event.detail.data) {
+            console.log('No valid data for template request.');
+            return;
+        }
+        const { a, b } = event.detail.data;
+        event.detail.pending = new Promise((resolve) => {
+            const point = this.getMatch(a, b);
+            resolve(point);
+        });
+    };
     getMatch(aSource, bSource) {
-        if (this.isOpenCvInitialized) {
+        if (!this.isOpenCvInitialized) {
             throw new Error(`OpenCV.js has not been initialized yet. First run ${this.initialize.name}`);
         }
         const a = cv.imread(aSource);
