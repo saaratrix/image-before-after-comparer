@@ -4,6 +4,25 @@ interface Mat {
     // Other methods and properties...
 }
 
+interface Orb {
+    detectAndCompute: (src: ImageArray, extra: Mat, keypoints: KeyPointVector, descriptors: Mat) => void;
+}
+
+interface KeyPointVector {
+    get: (index: number) => { pt: Point };
+}
+
+interface DMatch {
+    distance: number;
+    queryIdx: number;
+    trainIdx: number;
+}
+
+interface DMatchVector {
+    size: () => number
+    get: (index: number) => DMatch;
+}
+
 interface ImageArray {
     delete(): void;
 }
@@ -23,12 +42,18 @@ interface MinMaxLocResult {
 
 interface OpenCV {
     onRuntimeInitialized: () => void;
+
+    BFMatcher: new (normType: number, crossCheck: boolean) => any;
+    Mat: Mat;
+    ORB: new() => Orb;
+    DMatchVector: new () => DMatchVector;
+    KeyPointVector: new() => KeyPointVector;
     /**
      *
      * @param imageSource canvas element or id, or img element or id.
      */
     imread: (imageSource: HTMLCanvasElement | HTMLImageElement | string) => ImageArray;
-    Mat: Mat;
+    cvtColor: (src: any, dst: any, code: number, dstCn?: number) => void;
 
     TM_SQDIF: 0;
     TM_SQDIFF_NORMED: 1;
@@ -36,6 +61,9 @@ interface OpenCV {
     TM_CCORR_NORMED: 3;
     TM_CCOEFF: 4;
     TM_CCOEFF_NORMED: 5;
+
+    COLOR_RGBA2GRAY: number;
+    NORM_HAMMING: number;
 
     // Link to TemplateMatchMode: https://docs.opencv.org/3.4/df/dfb/group__imgproc__object.html#ga3a7850640f1fe1f58fe91a2d7583695d
     /**
