@@ -1,5 +1,4 @@
-import { PendingEvent } from "./models/pending-event";
-import { ImagePair } from "./models/image-pair";
+import { ImageTemplateRequestEvent, imageTemplateRequestEvent } from './models/events.js';
 
 export class ImagePositionAdjuster {
     static isRuntimeInitialized = false;
@@ -18,7 +17,7 @@ export class ImagePositionAdjuster {
                 this.isOpenCvInitialized = true
             });
 
-        document.addEventListener('image:template:request', (event) => this.onTemplateRequest(event as CustomEvent));
+        document.addEventListener(imageTemplateRequestEvent, (event) => this.onTemplateRequest(event as CustomEvent));
         return this.loadingCv;
     }
 
@@ -63,7 +62,7 @@ export class ImagePositionAdjuster {
         });
     }
 
-    private onTemplateRequest = (event: CustomEvent<PendingEvent<Point, ImagePair>>): void => {
+    private onTemplateRequest = (event: CustomEvent<ImageTemplateRequestEvent>): void => {
         if (!event.detail.data) {
             console.log('No valid data for template request.');
             return;
@@ -72,32 +71,66 @@ export class ImagePositionAdjuster {
         const { a, b } = event.detail.data;
 
         event.detail.pending = new Promise((resolve) => {
-            const point = this.getMatch(a, b);
+            const point = this.getMatches(a, b);//this.getTemplateMatch(a, b);
             resolve(point);
         });
     }
 
-    public getMatch(aSource: HTMLImageElement, bSource: HTMLImageElement): Point {
-        if (!this.isOpenCvInitialized) {
-            throw new Error(`OpenCV.js has not been initialized yet. First run ${this.initialize.name}`);
+    public getMatches(aSource: HTMLImageElement, bSource: HTMLImageElement): Point {
+        let orb = new cv.ORB();
+        let bf = new cv.BFMatcher(cv.NORM_HAMMING, true);
+
+        // Convert images to grayscale
+        let mat1 = cv.imread(aSource);
+        let mat2 = cv.imread(bSource);
+        cv.cvtColor(mat1, mat1, cv.COLOR_RGBA2GRAY, 0);
+        cv.cvtColor(mat2, mat2, cv.COLOR_RGBA2GRAY, 0);
+
+        // Detect keypoints and compute descriptors for each image
+        let keypoints1 = new cv.KeyPointVector();
+        let keypoints2 = new cv.KeyPointVector();
+        let descriptors1 = new cv.Mat();
+        let descriptors2 = new cv.Mat();
+        orb.detectAndCompute(mat1, new cv.Mat(), keypoints1, descriptors1);
+        orb.detectAndCompute(mat2, new cv.Mat(), keypoints2, descriptors2);
+
+        // Match the descriptors
+        let matches = new cv.DMatchVector();
+        try {
+          bf.match(descriptors1, descriptors2, matches);
+        } catch(e: any) {
+          console.log('error when matching', e.message, e);
         }
 
-        const a = cv.imread(aSource);
-        const b = cv.imread(bSource);
+        let dx = 0;
+        let dy = 0;
 
-        const dst = new cv.Mat();
-        const mask = new cv.Mat();
+        let goodMatches = 0;
 
-        cv.matchTemplate(a, b, dst, cv.TM_CCOEFF, mask);
+        for (let i = 0; i < matches.size(); ++i) {
+            let match = matches.get(i);
 
-        let result = cv.minMaxLoc(dst, mask);
-        let maxPoint = result.maxLoc;
-        console.log("Point of maximum correlation: ", maxPoint.x, maxPoint.y);
-        a.delete();
-        b.delete();
-        dst.delete();
-        mask.delete();
+            if (match.distance > 5) {
+              continue;
+            }
 
-        return maxPoint;
+          console.log(match.distance);
+
+            let pt1 = keypoints1.get(match.queryIdx).pt;
+            let pt2 = keypoints2.get(match.trainIdx).pt;
+
+            dx += pt2.x - pt1.x;
+            dy += pt2.y - pt1.y;
+            goodMatches++;
+        }
+
+        if (goodMatches === 0) {
+            return {x: 0, y: 0 };
+        }
+
+        dx /= goodMatches;
+        dy /= goodMatches;
+
+        return { x: -dx, y: -dy };
     }
 }

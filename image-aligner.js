@@ -1,3 +1,4 @@
+import { imageDataRequestEvent, imageTemplateRequestEvent, } from './models/events.js';
 export class ImageAligner {
     checkbox;
     button;
@@ -34,6 +35,7 @@ export class ImageAligner {
         console.log(`Auto image alignment is now ${target.checked ? 'ON' : 'OFF'}`);
     };
     handleButtonClick = async (event) => {
+        // Wait for the request for the image pair we're aligning.
         const imagePair = await this.tryGetImagePair();
         if (!imagePair) {
             return;
@@ -52,8 +54,11 @@ export class ImageAligner {
         imagePair.b.style.transform = `translate(${x}, ${y})`;
         console.log(x, y);
     };
+    /**
+     * Send an event to request the images we'll do alignment for.
+     */
     async tryGetImagePair() {
-        const dataRequestEvent = new CustomEvent('image:data:request', {
+        const dataRequestEvent = new CustomEvent(imageDataRequestEvent, {
             detail: {
                 pending: undefined,
             }
@@ -65,8 +70,11 @@ export class ImageAligner {
         }
         return await dataRequestEvent.detail.pending;
     }
+    /**
+     * Send an event to request the closest matched point.
+     */
     async tryGetMatchedPoint(imagePair) {
-        const openCVTemplateRequestEvent = new CustomEvent('image:template:request', {
+        const openCVTemplateRequestEvent = new CustomEvent(imageTemplateRequestEvent, {
             detail: {
                 pending: undefined,
                 data: imagePair,

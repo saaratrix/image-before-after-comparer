@@ -1,6 +1,7 @@
 import { ImageComparator } from './image-comparator.js';
 import { ImagePositionAdjuster } from './image-position-adjuster.js';
 import { ImageAligner } from "./image-aligner.js";
+import { imageDataRequestEvent } from './models/events.js';
 (function () {
     let imageComparisonRoot;
     let beforeImageElement;
@@ -34,7 +35,7 @@ import { ImageAligner } from "./image-aligner.js";
         trySetInitialImageUrls(beforeContainer, afterContainer);
     });
     const listenForImageDataRequest = () => {
-        document.addEventListener('image:data:request', (event) => {
+        document.addEventListener(imageDataRequestEvent, (event) => {
             if (!areImagesValid()) {
                 return;
             }

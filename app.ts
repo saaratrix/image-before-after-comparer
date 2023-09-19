@@ -1,6 +1,7 @@
 import { ImageComparator } from './image-comparator.js';
 import { ImagePositionAdjuster } from './image-position-adjuster.js';
 import { ImageAligner } from "./image-aligner.js";
+import { imageDataRequestEvent } from './models/events.js';
 
 (function() {
   type BeforeAfter = 'before' | 'after';
@@ -49,7 +50,7 @@ import { ImageAligner } from "./image-aligner.js";
   });
 
   const listenForImageDataRequest = () => {
-    document.addEventListener('image:data:request', (event: Event) => {
+    document.addEventListener(imageDataRequestEvent, (event: Event) => {
       if (!areImagesValid()) {
         return;
       }

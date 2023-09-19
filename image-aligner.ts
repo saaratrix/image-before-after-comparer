@@ -1,5 +1,7 @@
 import type { PendingEvent } from "./models/pending-event";
 import type { ImagePair } from "./models/image-pair";
+import type { ImageDataRequestEvent, ImageTemplateRequestEvent } from './models/events';
+import { imageDataRequestEvent, imageTemplateRequestEvent, } from './models/events.js';
 
 export class ImageAligner {
     private checkbox!: HTMLInputElement;
@@ -45,6 +47,7 @@ export class ImageAligner {
     }
 
     private handleButtonClick = async (event: Event): Promise<void> => {
+        // Wait for the request for the image pair we're aligning.
         const imagePair = await this.tryGetImagePair();
         if (!imagePair) {
             return;
@@ -66,10 +69,13 @@ export class ImageAligner {
         imagePair.b.style.transform = `translate(${x}, ${y})`;
 
         console.log(x, y);
-        }
+    }
 
+    /**
+     * Send an event to request the images we'll do alignment for.
+     */
     private async tryGetImagePair(): Promise<ImagePair | undefined> {
-        const dataRequestEvent = new CustomEvent<PendingEvent<ImagePair>>('image:data:request', {
+        const dataRequestEvent = new CustomEvent<ImageDataRequestEvent>(imageDataRequestEvent, {
             detail: {
                 pending: undefined,
             }
@@ -85,8 +91,11 @@ export class ImageAligner {
         return await dataRequestEvent.detail.pending;
     }
 
+    /**
+     * Send an event to request the closest matched point.
+     */
     private async tryGetMatchedPoint(imagePair: ImagePair): Promise<Point | undefined> {
-        const openCVTemplateRequestEvent = new CustomEvent<PendingEvent<Point, ImagePair>>('image:template:request', {
+        const openCVTemplateRequestEvent = new CustomEvent<ImageTemplateRequestEvent>(imageTemplateRequestEvent, {
             detail: {
                 pending: undefined,
                 data: imagePair,
